@@ -1,0 +1,37 @@
+# Commonsense reasoning (paper Table 16). Model/method configs in this folder override these values.
+task: commonsense
+seed: 1
+r: [8, 32]                  # run.py launches one run per rank
+lora_alpha: 4               # rsLoRA scaling s = lora_alpha / sqrt(r)
+lora_dropout: 0.05
+target_modules: [q_proj, k_proj, v_proj, down_proj, up_proj, gate_proj, o_proj]
+sds_warmup_steps: 10        # SDS-LoRA warm-up iterations T
+sds_k: 5                    # SDS-LoRA basis-update schedule k
+batch_size: 32              # global batch size
+disable_kv_cache: true      # model.config.use_cache = False before the main training stage, as in the reported runs
+save_adapter: false
+
+data:
+  train_file: data/commonsense/commonsense_170k.json
+  cutoff_len: 256
+  train_on_inputs: true
+
+eval:
+  data_dir: data/commonsense/eval
+  datasets: [boolq, piqa, social_i_qa, hellaswag, winogrande, ARC-Challenge, ARC-Easy, openbookqa]
+  batch_size: 50
+
+training_args:              # passed to transformers.TrainingArguments
+  num_train_epochs: 1
+  lr_scheduler_type: cosine
+  warmup_steps: 0
+  optim: adamw_torch
+  bf16: true
+  fp16: false
+  logging_steps: 1
+  eval_strategy: "no"
+  save_strategy: "no"
+  ddp_find_unused_parameters: false
+  group_by_length: false
+  report_to: none
+  seed: 42                  # Trainer seed; the reported commonsense runs used the TrainingArguments default

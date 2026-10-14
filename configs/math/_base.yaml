@@ -1,0 +1,35 @@
+# Math reasoning (paper Table 16). Model/method configs in this folder override these values.
+task: math
+seed: 1
+r: [8, 32]                  # run.py launches one run per rank
+lora_alpha: 4               # rsLoRA scaling s = lora_alpha / sqrt(r)
+lora_dropout: 0.05
+target_modules: [q_proj, k_proj, v_proj, down_proj, up_proj, o_proj, gate_proj]
+sds_warmup_steps: 10        # SDS-LoRA warm-up iterations T
+sds_k: 5                    # SDS-LoRA basis-update schedule k
+batch_size: 32              # global batch size
+save_adapter: true
+
+data:
+  train_file: data/math/MetaMathQA-395K.json
+  data_length: 100000       # random subset of MetaMathQA
+  model_max_length: 512
+
+eval:
+  gsm8k_file: data/math/GSM8K_test.jsonl
+  math_file: data/math/MATH_test.jsonl
+  batch_size: 100
+
+training_args:              # passed to transformers.TrainingArguments; seed defaults to the top-level seed
+  num_train_epochs: 1
+  lr_scheduler_type: cosine
+  warmup_ratio: 0
+  weight_decay: 0
+  optim: adamw_torch
+  bf16: true
+  fp16: false
+  logging_steps: 1
+  eval_strategy: "no"
+  save_strategy: "no"
+  per_device_eval_batch_size: 4
+  report_to: none
