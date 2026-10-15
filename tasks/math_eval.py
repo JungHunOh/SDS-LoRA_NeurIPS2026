@@ -199,7 +199,7 @@ def test_hendrycks_math(model, tokenizer, data_path, save_path, start=0, end=MAX
         "Write a response that appropriately completes the request.\n\n"
         "### Instruction:\n{instruction}\n\n### Response: Let's think step by step."
     )
-    print('promt =====', problem_prompt)
+    print('prompt template:', problem_prompt)
     with open(data_path, "r+", encoding="utf8") as f:
         for idx, item in enumerate(jsonlines.Reader(f)):
             temp_instr = problem_prompt.format(instruction=item["instruction"])
@@ -211,7 +211,7 @@ def test_hendrycks_math(model, tokenizer, data_path, save_path, start=0, end=MAX
     print('total length ===', len(hendrycks_math_ins))
     hendrycks_math_ins = hendrycks_math_ins[start:end]
     hendrycks_math_answers = hendrycks_math_answers[start:end]
-    print('lenght ====', len(hendrycks_math_ins))
+    print('length of inputs:', len(hendrycks_math_ins))
     batch_hendrycks_math_ins = batch_data(hendrycks_math_ins, batch_size=batch_size)
 
 
@@ -219,12 +219,7 @@ def test_hendrycks_math(model, tokenizer, data_path, save_path, start=0, end=MAX
     model.eval()
 
     res_completions = []
-    for idx, (prompt, prompt_answer) in enumerate(tqdm(zip(batch_hendrycks_math_ins, hendrycks_math_answers), total=len(batch_hendrycks_math_ins), desc="Generating completions")):
-        if isinstance(prompt, list):
-            pass
-        else:
-            prompt = [prompt]
-
+    for prompt in tqdm(batch_hendrycks_math_ins, desc="Generating completions"):
         inputs = tokenizer(prompt, return_tensors="pt", padding=True).to("cuda")
 
         with torch.no_grad():
@@ -246,12 +241,16 @@ def test_hendrycks_math(model, tokenizer, data_path, save_path, start=0, end=MAX
         res = process_results(prompt, completion, prompt_answer)
         results.append(res)
 
-    acc = sum(results) / len(results)
-    print('len invalid outputs ====', len(invalid_outputs))
-    print('start===', start, ', end====',end)
-    print('length====', len(results), ', acc====', acc)
+    correct_count = sum(results)
+    acc = correct_count / len(results)
+
+    print("\nFinal results:")
+    print(f"Number of correct answers: {correct_count} / {len(results)}")
+    print(f"Accuracy: {acc:.4f}")
+    print(f"Number of invalid outputs: {len(invalid_outputs)}")
 
     with open(save_path, "w", encoding="utf-8") as f_out:
-        f_out.write(f'len invalid outputs ===={len(invalid_outputs)}')
-        f_out.write(f'length===={len(results)}, acc===={acc}')
+        f_out.write(f"Number of correct answers: {correct_count} / {len(results)}\n")
+        f_out.write(f"Accuracy: {acc:.4f}\n")
+        f_out.write(f"Number of invalid outputs: {len(invalid_outputs)}\n")
     print(f"Results saved to {save_path}")

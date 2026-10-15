@@ -178,9 +178,7 @@ class SupervisedDataset(Dataset):
         list_data_dict = random.sample(list_data_dict,  len(list_data_dict))
         list_data_dict = list_data_dict[:data_length]
 
-        # logging.warning("Formatting inputs...")
         prompt_input, prompt_no_input = PROMPT_DICT["prompt_input"], PROMPT_DICT["prompt_no_input"]
-        # print(list_data_dict[0])
         if 'instruction' in list_data_dict[0]:
             pass
         else:
@@ -189,7 +187,6 @@ class SupervisedDataset(Dataset):
                     return ''
                 return '\n'.join(query.split('\n')[1:])
             list_data_dict = [{'instruction':data['query'].split('\n')[0], 'input':get_input(data['query']), 'output':data['response']} for data in list_data_dict]
-        # import ipdb; ipdb.set_trace()
         sources = [
             prompt_input.format_map(example) if example.get("input", "") != "" else prompt_no_input.format_map(example)
             for example in list_data_dict

@@ -1,7 +1,7 @@
 defaults: _base.yaml
 model: llama3
 base_model: meta-llama/Meta-Llama-3-8B
-method: base
+method: rslora
 micro_batch_size: 8     # per-GPU batch; the rest is gradient accumulation
 training_args:
   learning_rate: 1.0e-4

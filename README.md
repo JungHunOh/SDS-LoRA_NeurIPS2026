@@ -2,15 +2,21 @@
 
 Code for the commonsense-reasoning and math-reasoning experiments of
 [SDS-LoRA (arXiv:2606.16454)](https://arxiv.org/abs/2606.16454). Each run fine-tunes a model with
-LoRA (`base`) or SDS-LoRA (`sdslora`) and then evaluates it.
+rsLoRA (`rslora`) or SDS-LoRA (`sdslora`) and then evaluates it.
 
 ## Setup
 
 Tested with Python 3.13 and CUDA 12.4.
 
 ```bash
+conda create -n sdslora python=3.13 -y
+conda activate sdslora
 pip install -r requirements.txt
 ```
+
+Gemma-2B and LLaMA3-8B are gated on Hugging Face. Accept the license on the model page
+([google/gemma-2b](https://huggingface.co/google/gemma-2b), [meta-llama/Meta-Llama-3-8B](https://huggingface.co/meta-llama/Meta-Llama-3-8B))
+and log in with `hf auth login` before the first run.
 
 Put the data under `data/`:
 
@@ -27,13 +33,28 @@ data/
 ```
 
 LLM-Adapters: <https://github.com/AGI-Edgerunners/LLM-Adapters>, MetaMath: <https://github.com/meta-math/MetaMath>.
+To download everything:
+
+```bash
+LA=https://raw.githubusercontent.com/AGI-Edgerunners/LLM-Adapters/main
+MM=https://raw.githubusercontent.com/meta-math/MetaMath/main/data/test
+mkdir -p data/math
+curl -fL --create-dirs -o data/commonsense/commonsense_170k.json $LA/ft-training_set/commonsense_170k.json
+for d in boolq piqa social_i_qa hellaswag winogrande ARC-Challenge ARC-Easy openbookqa; do
+  curl -fL --create-dirs -o data/commonsense/eval/$d/test.json $LA/dataset/$d/test.json
+done
+curl -fL -o data/math/GSM8K_test.jsonl $MM/GSM8K_test.jsonl
+curl -fL -o data/math/MATH_test.jsonl $MM/MATH_test.jsonl
+curl -fL -o data/math/MetaMathQA-395K.json \
+  https://huggingface.co/datasets/meta-math/MetaMathQA/resolve/main/MetaMathQA-395K.json
+```
 
 ## Running
 
 ```bash
 # one run per rank listed in the config (r: [8, 32])
 python run.py configs/commonsense/gemma_sdslora.yaml --gpu 0,1,2,3
-python run.py configs/math/llama3_base.yaml --gpu 0,1
+python run.py configs/math/llama3_rslora.yaml --gpu 0,1
 
 # override any config value with dotted keys
 python run.py configs/math/gemma_sdslora.yaml --gpu 0 r=32 seed=2 training_args.learning_rate=1e-4
@@ -48,7 +69,7 @@ Outputs go to `outputs/<task>/<model>_r<r>_<method>_seed<seed>/`. Each run direc
 
 | File | Contents |
 |---|---|
-| `log.txt` | Training log |
+| `log.txt` | Training log (stdout of `train.py`; progress bars and tracebacks go to the terminal) |
 | `config.yaml` | Resolved config |
 | `commonsense_eval.txt` | Accuracy on the 8 commonsense benchmarks and their average |
 | `gsm8k_eval.txt`, `math_eval.txt` | GSM8K and MATH accuracy |
@@ -62,9 +83,9 @@ gradient accumulation covering the rest. The effective batch size therefore does
 ```
 configs/
 ├── commonsense/_base.yaml        # settings shared by every commonsense run
-├── commonsense/{gemma,llama3}_{base,sdslora}.yaml
+├── commonsense/{gemma,llama3}_{rslora,sdslora}.yaml
 ├── math/_base.yaml
-└── math/{gemma,llama3}_{base,sdslora}.yaml
+└── math/{gemma,llama3}_{rslora,sdslora}.yaml
 ```
 
 A model/method config sets `defaults: _base.yaml` and overrides only what differs: the model, the method,
