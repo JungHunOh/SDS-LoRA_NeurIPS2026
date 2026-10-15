@@ -9,8 +9,14 @@ rsLoRA (`rslora`) or SDS-LoRA (`sdslora`) and then evaluates it.
 Tested with Python 3.13 and CUDA 12.4.
 
 ```bash
+conda create -n sdslora python=3.13 -y
+conda activate sdslora
 pip install -r requirements.txt
 ```
+
+Gemma-2B and LLaMA3-8B are gated on Hugging Face. Accept the license on the model page
+([google/gemma-2b](https://huggingface.co/google/gemma-2b), [meta-llama/Meta-Llama-3-8B](https://huggingface.co/meta-llama/Meta-Llama-3-8B))
+and log in with `hf auth login` before the first run.
 
 Put the data under `data/`:
 
@@ -27,6 +33,21 @@ data/
 ```
 
 LLM-Adapters: <https://github.com/AGI-Edgerunners/LLM-Adapters>, MetaMath: <https://github.com/meta-math/MetaMath>.
+To download everything:
+
+```bash
+LA=https://raw.githubusercontent.com/AGI-Edgerunners/LLM-Adapters/main
+MM=https://raw.githubusercontent.com/meta-math/MetaMath/main/data/test
+mkdir -p data/math
+curl -fL --create-dirs -o data/commonsense/commonsense_170k.json $LA/ft-training_set/commonsense_170k.json
+for d in boolq piqa social_i_qa hellaswag winogrande ARC-Challenge ARC-Easy openbookqa; do
+  curl -fL --create-dirs -o data/commonsense/eval/$d/test.json $LA/dataset/$d/test.json
+done
+curl -fL -o data/math/GSM8K_test.jsonl $MM/GSM8K_test.jsonl
+curl -fL -o data/math/MATH_test.jsonl $MM/MATH_test.jsonl
+curl -fL -o data/math/MetaMathQA-395K.json \
+  https://huggingface.co/datasets/meta-math/MetaMathQA/resolve/main/MetaMathQA-395K.json
+```
 
 ## Running
 
@@ -48,7 +69,7 @@ Outputs go to `outputs/<task>/<model>_r<r>_<method>_seed<seed>/`. Each run direc
 
 | File | Contents |
 |---|---|
-| `log.txt` | Training log |
+| `log.txt` | Training log (stdout of `train.py`; progress bars and tracebacks go to the terminal) |
 | `config.yaml` | Resolved config |
 | `commonsense_eval.txt` | Accuracy on the 8 commonsense benchmarks and their average |
 | `gsm8k_eval.txt`, `math_eval.txt` | GSM8K and MATH accuracy |
