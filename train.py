@@ -1,4 +1,4 @@
-''' Fine-tune with LoRA (`method: base`) or SDS-LoRA (`method: sdslora`), then evaluate on rank 0.
+''' Fine-tune with rsLoRA (`method: rslora`) or SDS-LoRA (`method: sdslora`), then evaluate on rank 0.
 
     torchrun --nproc_per_node=<num_gpus> train.py <config.yaml> [key=value ...] [--no_eval]
 
@@ -18,7 +18,7 @@ from tasks import get_task
 
 def train(cfg):
     task = get_task(cfg['task'])
-    assert cfg['method'] in ('base', 'sdslora'), cfg['method']
+    assert cfg['method'] in ('rslora', 'sdslora'), cfg['method']
     assert isinstance(cfg['r'], int), "pick a single rank, e.g. r=32 (run.py sweeps over a list)"
     output_dir = output_dir_of(cfg)
 

@@ -2,7 +2,7 @@
 
 Code for the commonsense-reasoning and math-reasoning experiments of
 [SDS-LoRA (arXiv:2606.16454)](https://arxiv.org/abs/2606.16454). Each run fine-tunes a model with
-LoRA (`base`) or SDS-LoRA (`sdslora`) and then evaluates it.
+rsLoRA (`rslora`) or SDS-LoRA (`sdslora`) and then evaluates it.
 
 ## Setup
 
@@ -33,7 +33,7 @@ LLM-Adapters: <https://github.com/AGI-Edgerunners/LLM-Adapters>, MetaMath: <http
 ```bash
 # one run per rank listed in the config (r: [8, 32])
 python run.py configs/commonsense/gemma_sdslora.yaml --gpu 0,1,2,3
-python run.py configs/math/llama3_base.yaml --gpu 0,1
+python run.py configs/math/llama3_rslora.yaml --gpu 0,1
 
 # override any config value with dotted keys
 python run.py configs/math/gemma_sdslora.yaml --gpu 0 r=32 seed=2 training_args.learning_rate=1e-4
@@ -62,9 +62,9 @@ gradient accumulation covering the rest. The effective batch size therefore does
 ```
 configs/
 ├── commonsense/_base.yaml        # settings shared by every commonsense run
-├── commonsense/{gemma,llama3}_{base,sdslora}.yaml
+├── commonsense/{gemma,llama3}_{rslora,sdslora}.yaml
 ├── math/_base.yaml
-└── math/{gemma,llama3}_{base,sdslora}.yaml
+└── math/{gemma,llama3}_{rslora,sdslora}.yaml
 ```
 
 A model/method config sets `defaults: _base.yaml` and overrides only what differs: the model, the method,
