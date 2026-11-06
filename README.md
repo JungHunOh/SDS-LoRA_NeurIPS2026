@@ -1,8 +1,26 @@
 # SDS-LoRA: Overcoming Anisotropic Gradient Scaling in Low-Rank Adaptation
 
 Code for the commonsense-reasoning and math-reasoning experiments of
-[SDS-LoRA (arXiv:2606.16454)](https://arxiv.org/abs/2606.16454). Each run fine-tunes a model with
+[SDS-LoRA (NeurIPS 2026, arXiv:2606.16454)](https://arxiv.org/abs/2606.16454). Each run fine-tunes a model with
 rsLoRA (`rslora`) or SDS-LoRA (`sdslora`) and then evaluates it.
+
+## Abstract
+
+Low-Rank Adaptation (LoRA) enables efficient adaptation of large pretrained models to downstream tasks by
+parameterizing weight updates with low-rank matrices. In this paper, we investigate the limitations of the LoRA
+parameterization from a geometric perspective. Specifically, we show that when a full fine-tuning gradient is
+backpropagated to the low-rank matrices, it undergoes anisotropic scaling driven by their singular values. We argue
+that this phenomenon is undesirable because it distorts the full fine-tuning gradient by skewing it toward dominant
+singular directions while suppressing others. Our analyses demonstrate that anisotropic gradient scaling reduces the
+effective rank of the low-rank matrices' gradients and fails to provide the best possible alignment between the full
+fine-tuning gradient and its low-rank approximation in LoRA for arbitrary gradients, thereby exacerbating the gap to
+full fine-tuning. To address these limitations, we propose a new low-rank parameterization, SDS-LoRA, which
+Structurally Decouples Singular values from the backward pass. Our method ensures that the full fine-tuning gradient
+backpropagates only through the orthonormal bases of the low-rank matrices' subspaces, independent of their scales.
+Convergence analysis demonstrates that while LoRA's convergence rate degrades with the condition number of the
+low-rank matrices, that of SDS-LoRA remains independent of it. Experimental results across natural language and
+vision benchmarks show that SDS-LoRA improves loss convergence and reduces the gap to full fine-tuning, significantly
+enhancing adaptation performance.
 
 ## Setup
 
@@ -152,11 +170,11 @@ The data processing and evaluation code for commonsense reasoning is adapted fro
 ## Citation
 
 ```bibtex
-@article{oh2026sdslora,
-  title   = {SDS-LoRA: Overcoming Anisotropic Gradient Scaling in Low-Rank Adaptation},
-  author  = {Oh, Junghun and Baik, Sungyong and Lee, Kyoung Mu},
-  journal = {arXiv preprint arXiv:2606.16454},
-  year    = {2026}
+@inproceedings{oh2026sdslora,
+  title     = {SDS-LoRA: Overcoming Anisotropic Gradient Scaling in Low-Rank Adaptation},
+  author    = {Oh, Junghun and Baik, Sungyong and Lee, Kyoung Mu},
+  booktitle = {Advances in Neural Information Processing Systems},
+  year      = {2026}
 }
 ```
 
