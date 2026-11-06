@@ -22,6 +22,8 @@ low-rank matrices, that of SDS-LoRA remains independent of it. Experimental resu
 vision benchmarks show that SDS-LoRA improves loss convergence and reduces the gap to full fine-tuning, significantly
 enhancing adaptation performance.
 
+![Figure 1: Adverse effects of anisotropic gradient scaling in LoRA. (a) Effective rank of gradients for LoRA, LoRA without anisotropic scaling, and SDS-LoRA during training. (b) Alignment between the full gradient G and its approximation with non-uniform and uniform singular values.](assets/figure1.png)
+
 ## Setup
 
 Tested with Python 3.13 and CUDA 12.4. Training runs in bf16, so it needs NVIDIA GPUs that support bf16.
