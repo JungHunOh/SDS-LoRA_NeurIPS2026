@@ -41,7 +41,13 @@ def main():
             cmd.append('--no_eval')
         cmd = f"{shlex.join(cmd)} | tee {shlex.quote(os.path.join(output_dir, 'log.txt'))}"
         print(f"[run.py] {cmd}", flush=True)
-        subprocess.run(cmd, shell=True, env={**os.environ, 'CUDA_VISIBLE_DEVICES': cli.gpu})
+        # pipefail: report train.py's exit status, not tee's
+        result = subprocess.run(f"set -o pipefail; {cmd}", shell=True, executable='/bin/bash',
+                                env={**os.environ, 'CUDA_VISIBLE_DEVICES': cli.gpu})
+        if result.returncode != 0:
+            print(f"[run.py] r={r} failed with exit code {result.returncode}; skipping the remaining ranks. "
+                  f"See {output_dir}/log.txt and the terminal output.", file=sys.stderr, flush=True)
+            sys.exit(result.returncode)
 
 
 if __name__ == '__main__':

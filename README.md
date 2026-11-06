@@ -6,13 +6,21 @@ rsLoRA (`rslora`) or SDS-LoRA (`sdslora`) and then evaluates it.
 
 ## Setup
 
-Tested with Python 3.13 and CUDA 12.4.
+Tested with Python 3.13 and CUDA 12.4. Training runs in bf16, so it needs NVIDIA GPUs that support bf16.
+The `torch==2.6.0` wheel from PyPI ships with the CUDA 12.4 runtime, so only an NVIDIA driver that supports
+CUDA 12.4 is needed (no separate CUDA toolkit).
+
+Run all commands in this README from the repository root.
+
+Install [uv](https://docs.astral.sh/uv/getting-started/installation/), then:
 
 ```bash
-conda create -n sdslora python=3.13 -y
-conda activate sdslora
-pip install -r requirements.txt
+uv sync
+source .venv/bin/activate
 ```
+
+`uv sync` downloads Python 3.13 if needed, creates `.venv`, and installs the exact versions in `uv.lock`.
+Run `source .venv/bin/activate` again in each new shell before using the commands below.
 
 Gemma-2B and LLaMA3-8B are gated on Hugging Face. Accept the license on the model page
 ([google/gemma-2b](https://huggingface.co/google/gemma-2b), [meta-llama/Meta-Llama-3-8B](https://huggingface.co/meta-llama/Meta-Llama-3-8B))
@@ -76,7 +84,11 @@ Outputs go to `outputs/<task>/<model>_r<r>_<method>_seed<seed>/`. Each run direc
 | `adapter_model.safetensors` | Saved LoRA weights (math only) |
 
 `batch_size` is the global batch size. It is split across GPUs into `micro_batch_size` per GPU, with
-gradient accumulation covering the rest. The effective batch size therefore does not depend on the number of GPUs.
+gradient accumulation covering the rest. The effective batch size therefore does not depend on the number of GPUs,
+as long as the GPU count divides `batch_size` (1, 2, 4 or 8 GPUs for the provided configs); `train.py` stops with an
+error otherwise.
+
+If a run fails, `run.py` exits with its exit code and does not start the remaining ranks.
 
 ## Configs
 
@@ -125,7 +137,9 @@ leaves the installed package unchanged. The mapping to the paper:
 Notes:
 - `update_bases` leaves a layer's bases unchanged while any column of B or row of A has norm ≤ 1e-2.
   The training log reports the fraction of such layers at the most recent update as `sds_skip_ratio`.
-- The saved adapter contains A and B only. Evaluation runs on the in-memory model right after training.
+- The saved adapter contains A and B only, not Q_A and Q_B. Evaluation runs on the in-memory model right after training.
+  For LLaMA3 math runs, `peft` also saves `embed_tokens` and `lm_head` (about 2 GB): LLaMA3 has no pad token, so
+  `tasks/math_reasoning.py` adds one and resizes the embeddings, and `peft` saves resized embedding layers.
 - Commonsense runs use the HF `Trainer` seed 42 (`training_args.seed`), and `seed` for everything else.
   Math runs use `seed` for both.
 

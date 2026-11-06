@@ -60,6 +60,7 @@ def evaluate(model, tokenizer, cfg, output_dir):
     model.eval()
 
     accs = []
+    open(result_file, 'w').close()  # start fresh so a rerun does not append to an old result
 
     for ds in cfg['eval']['datasets']:
         dataset = load_data(data_dir, ds)
@@ -84,13 +85,13 @@ def evaluate(model, tokenizer, cfg, output_dir):
             print('---------------')
             pbar.update(1)
         pbar.close()
-        with open(result_file, 'a+') as f:
-            f.write(f'\rTask:{ds} test:{idx + 1}/{total} | accuracy {correct}  {correct / (current)}')
+        with open(result_file, 'a') as f:
+            f.write(f'Task:{ds} test:{idx + 1}/{total} | accuracy {correct}  {correct / current}\n')
             accs.append(correct / current)
         print('\n')
         print('test finished')
-    with open(result_file, 'a+') as f:
-        f.write(f'\rAverage accuracy: {sum(accs) / len(accs)}\n')
+    with open(result_file, 'a') as f:
+        f.write(f'Average accuracy: {sum(accs) / len(accs)}\n')
 
 
 def generate_prompt(instruction, input=None):
