@@ -28,6 +28,10 @@ def train(cfg):
     world_size = int(os.environ.get('WORLD_SIZE', 1))
     micro_batch_size = min(cfg['micro_batch_size'], cfg['batch_size'] // world_size)
     grad_accum = cfg['batch_size'] // micro_batch_size // world_size
+    assert micro_batch_size * grad_accum * world_size == cfg['batch_size'], (
+        f"batch_size={cfg['batch_size']} cannot be split exactly over {world_size} GPUs with "
+        f"micro_batch_size={cfg['micro_batch_size']} (got {micro_batch_size} x {grad_accum} x {world_size}); "
+        "use a GPU count that divides it, e.g. 1, 2, 4 or 8")
 
     model = transformers.AutoModelForCausalLM.from_pretrained(cfg['base_model'], torch_dtype=torch.bfloat16)
     tokenizer = task.load_tokenizer(cfg, model)
